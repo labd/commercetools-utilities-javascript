@@ -1,0 +1,66 @@
+{
+  "version": "0.1.0",
+  "license": "MIT",
+  "main": "dist/index.js",
+  "typings": "dist/index.d.ts",
+  "files": [
+    "dist",
+    "src"
+  ],
+  "engines": {
+    "node": ">=10"
+  },
+  "publishConfig": {
+    "access": "public"
+  },
+  "scripts": {
+    "start": "tsdx watch",
+    "build": "tsdx build",
+    "test": "tsdx test",
+    "lint": "tsdx lint",
+    "prepare": "tsdx build",
+    "size": "size-limit",
+    "analyze": "size-limit --why"
+  },
+  "husky": {
+    "hooks": {
+      "pre-commit": "tsdx lint"
+    }
+  },
+  "prettier": {
+    "printWidth": 80,
+    "semi": true,
+    "singleQuote": true,
+    "trailingComma": "es5"
+  },
+  "name": "@labdigital/commercetools-utilities",
+  "author": "Bram Kaashoek",
+  "module": "dist/commercetools-utilities.esm.js",
+  "size-limit": [
+    {
+      "path": "dist/commercetools-utilities.cjs.production.min.js",
+      "limit": "10 KB"
+    },
+    {
+      "path": "dist/commercetools-utilities.esm.js",
+      "limit": "10 KB"
+    }
+  ],
+  "devDependencies": {
+    "@size-limit/preset-small-lib": "^4.9.1",
+    "aws-sdk": "2.795.0",
+    "husky": "^4.3.6",
+    "size-limit": "^4.9.1",
+    "tsdx": "^0.14.1",
+    "tslib": "^2.0.3",
+    "typescript": "^4.1.3"
+  },
+  "peerDependencies": {
+    "aws-sdk": "2.795.0"
+  },
+  "dependencies": {
+    "@commercetools/platform-sdk": "^1.6.1",
+    "@labdigital/lambda-utilities": "^0.2.0",
+    "node-fetch": "^2.6.1"
+  }
+}
