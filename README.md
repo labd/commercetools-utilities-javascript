@@ -2,8 +2,8 @@
 
 ## getApiRoot
 
-## getApiRootCustoemr
-
-## getTokenScopedCtActions
+## getApiRootCustomer
 
 ## getCTActions
+
+## getCtActionsForCustomer

@@ -15,7 +15,7 @@ interface MethordArgs {
  * These CT actions will use the customers token to be performed, meaning that all actions will be within the users scope.
  * e.g. Only the users own orders will be fetchable with this token.
  */
-export const getTokenScopedCtActions = async ({
+export const getCtActionsForCustomer = async ({
   customerToken,
 }: {
   customerToken: string;
