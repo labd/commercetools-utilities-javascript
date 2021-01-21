@@ -128,13 +128,16 @@ export const retry = async (
   try {
     return await fn();
   } catch (err) {
-    if (err.name === 'ConcurrentModification' && times > 1) {
+    if (err.statusCode === 409 && times > 1) {
       if (request.body.version) {
         const newVersion: number = err.body?.errors[0]?.currentVersion;
         if (!newVersion)
           throw new Error(
             `could not find currentVersion on body of ${JSON.stringify(err)} `
           );
+        console.log(
+          `Conflicting version, retrying with updated version: ${newVersion}`
+        );
         request.body.version = newVersion;
       }
       await delay(delayTimeMs);
