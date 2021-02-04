@@ -896,10 +896,10 @@
     exec-sh "^0.3.2"
     minimist "^1.2.0"
 
-"@commercetools/platform-sdk@^1.6.1":
-  version "1.6.1"
-  resolved "https://registry.yarnpkg.com/@commercetools/platform-sdk/-/platform-sdk-1.6.1.tgz#2fa96bf68780dffe0f0873b0b3cf6e619e1821c9"
-  integrity sha512-aRcMrT1hqkGFAB2moIjmjQSgHH8dSKG5s/HiMSsJvtEp2JlC+SwbY7PXPLakpjF84RQJjwd/ApJ87bxe2ZZg1Q==
+"@commercetools/platform-sdk@^1.8.0":
+  version "1.8.0"
+  resolved "https://registry.yarnpkg.com/@commercetools/platform-sdk/-/platform-sdk-1.8.0.tgz#1686320fbd218948fbf1a617f4b20620e7bbd775"
+  integrity sha512-99dUew0Cbw7rW6Wl8wcWpINJvxxiGSnNaYjyQOg49qIfa77xti7b82n17OmgpuoA39vxD9gSuVbsFfHxV1hr2g==
   dependencies:
     "@commercetools/sdk-client" "^2.1.1"
     "@commercetools/sdk-middleware-auth" "^6.0.4"

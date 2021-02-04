@@ -1,5 +1,5 @@
 {
-  "version": "0.2.0",
+  "version": "0.2.1",
   "license": "MIT",
   "main": "dist/index.js",
   "typings": "dist/index.d.ts",
@@ -59,7 +59,7 @@
     "aws-sdk": "2.795.0"
   },
   "dependencies": {
-    "@commercetools/platform-sdk": "^1.6.1",
+    "@commercetools/platform-sdk": "^1.8.0",
     "@labdigital/lambda-utilities": "^0.2.0",
     "node-fetch": "^2.6.1"
   }
