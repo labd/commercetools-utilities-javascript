@@ -86,7 +86,7 @@ export const getCtClientServer = async () => {
   const authMiddleware = await getAuthMiddleware();
 
   return createClient({
-    middlewares: [authMiddleware, httpMiddleware],
+    middlewares: [authMiddleware, httpMiddleware, errorMiddleware],
   });
 };
 
@@ -106,7 +106,7 @@ export const getApiRootForCustomer = (authorization: string) => {
     authorization
   );
   const client = createClient({
-    middlewares: [customerAuthMiddleware, httpMiddleware],
+    middlewares: [customerAuthMiddleware, httpMiddleware, errorMiddleware],
   });
   return createApiBuilderFromCtpClient(client).withProjectKey({ projectKey });
 };
@@ -161,3 +161,16 @@ export function createApiBuilderFromCtpClient(
     baseUri: baseUri,
   });
 }
+
+// types from https://github.com/commercetools/nodejs/tree/master/types
+// middleware as https://github.com/commercetools/nodejs/tree/master/packages/sdk-middleware-logger
+export const errorMiddleware = (next: any) => (request: any, response: any) => {
+  const { error } = response;
+  if (error && error.code !== 409)
+    // we handle 409s elsewhere
+    throw new Error(
+      `CT ${error.status} (${error.code}) error: ${error.message}`
+    );
+
+  next(request, response);
+};
