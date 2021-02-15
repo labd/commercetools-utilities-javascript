@@ -166,8 +166,7 @@ export function createApiBuilderFromCtpClient(
 // middleware as https://github.com/commercetools/nodejs/tree/master/packages/sdk-middleware-logger
 export const errorMiddleware = (next: any) => (request: any, response: any) => {
   const { error } = response;
-  if (error && error.code !== 409)
-    // we handle 409s elsewhere
+  if (error && ![401, 403, 409].includes(error.code))
     throw new Error(
       `CT ${error.status} (${error.code}) error: ${error.message}`
     );
