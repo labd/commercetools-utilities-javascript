@@ -1,5 +1,9 @@
 import { createClient } from '@commercetools/sdk-client';
-import { ApiRoot, ClientRequest } from '@commercetools/platform-sdk';
+import {
+  ApiRoot,
+  ClientRequest,
+  createApiBuilderFromCtpClient,
+} from '@commercetools/platform-sdk';
 import { createHttpMiddleware } from '@commercetools/sdk-middleware-http';
 import {
   createAuthMiddlewareWithExistingToken,
@@ -92,7 +96,7 @@ export const getCtClientServer = async () => {
 
 export const getApiRoot = async () => {
   const server = await getCtClientServer();
-  return createApiBuilderFromCtpClient(server).withProjectKey({
+  return createApiBuilderWithRetryFromCtpClient(server).withProjectKey({
     projectKey,
   });
 };
@@ -108,7 +112,9 @@ export const getApiRootForCustomer = (authorization: string) => {
   const client = createClient({
     middlewares: [customerAuthMiddleware, httpMiddleware, errorMiddleware],
   });
-  return createApiBuilderFromCtpClient(client).withProjectKey({ projectKey });
+  return createApiBuilderWithRetryFromCtpClient(client).withProjectKey({
+    projectKey,
+  });
 };
 
 export const validateResponse = (response: any, message: string): void => {
@@ -148,7 +154,7 @@ export const retry = async (
   }
 };
 
-export function createApiBuilderFromCtpClient(
+export function createApiBuilderWithRetryFromCtpClient(
   ctpClient: any,
   baseUri?: string
 ): ApiRoot {
@@ -162,14 +168,21 @@ export function createApiBuilderFromCtpClient(
   });
 }
 
-// types from https://github.com/commercetools/nodejs/tree/master/types
+// types from https://github.com/commercetools/nodejs/tree/master/types/sdk.js
 // middleware as https://github.com/commercetools/nodejs/tree/master/packages/sdk-middleware-logger
 export const errorMiddleware = (next: any) => (request: any, response: any) => {
   const { error } = response;
-  if (error && ![401, 403, 409].includes(error.code))
+  if (error && ![400, 401, 403, 409].includes(response.statusCode))
     throw new Error(
       `CT ${error.status} (${error.code}) error: ${error.message}`
     );
 
   next(request, response);
+};
+
+export const getApiRootWithoutRetry = async () => {
+  const server = await getCtClientServer();
+  return createApiBuilderFromCtpClient(server).withProjectKey({
+    projectKey,
+  });
 };
