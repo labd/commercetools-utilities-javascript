@@ -172,7 +172,7 @@ export function createApiBuilderWithRetryFromCtpClient(
 // middleware as https://github.com/commercetools/nodejs/tree/master/packages/sdk-middleware-logger
 export const errorMiddleware = (next: any) => (request: any, response: any) => {
   const { error } = response;
-  if (error && ![400, 401, 403, 409].includes(response.statusCode))
+  if (error && (response.statusCode < 400 || response.statusCode >= 500))
     throw new Error(
       `CT ${error.status} (${error.code}) error: ${error.message}`
     );
