@@ -94,9 +94,57 @@ export const getCtClientServer = async () => {
   });
 };
 
+const commercetoolsClient: {
+  instance: ApiRoot | undefined;
+  created: Number | undefined;
+} = {
+  instance: undefined,
+  created: undefined,
+};
+
+export const getApiRoot = async () => {
+  const timestamp = new Date().getTime() / 1000;
+
+  if (
+    !commercetoolsClient.created ||
+    commercetoolsClient.created < timestamp - 900
+  ) {
+    const server = await getCtClientServer();
+    commercetoolsClient.instance = createApiBuilderFromCtpClient(server);
+    commercetoolsClient.created = timestamp;
+  }
+
+  assert(commercetoolsClient.instance);
+  return commercetoolsClient.instance.withProjectKey({
+    projectKey,
+  });
+};
+
+const commercetoolsClientWithRetry: {
+  instance: ApiRoot | undefined;
+  created: Number | undefined;
+} = {
+  instance: undefined,
+  created: undefined,
+};
+
 export const getApiRootWithRetry = async () => {
-  const server = await getCtClientServer();
-  return createApiBuilderWithRetryFromCtpClient(server).withProjectKey({
+  const timestamp = new Date().getTime() / 1000;
+
+  if (
+    !commercetoolsClientWithRetry.created ||
+    commercetoolsClientWithRetry.created < timestamp - 900
+  ) {
+    const server = await getCtClientServer();
+    commercetoolsClientWithRetry.instance = createApiBuilderWithRetryFromCtpClient(
+      server
+    );
+    commercetoolsClientWithRetry.created = timestamp;
+  }
+
+  assert(commercetoolsClientWithRetry.instance);
+  assert(process.env.CT_PROJECT_KEY, 'CT_PROJECT_KEY missing');
+  return commercetoolsClientWithRetry.instance.withProjectKey({
     projectKey,
   });
 };
@@ -183,11 +231,4 @@ export const errorMiddleware = (next: any) => (request: any, response: any) => {
     );
 
   next(request, response);
-};
-
-export const getApiRoot = async () => {
-  const server = await getCtClientServer();
-  return createApiBuilderFromCtpClient(server).withProjectKey({
-    projectKey,
-  });
 };
