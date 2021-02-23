@@ -94,7 +94,7 @@ export const getCtClientServer = async () => {
   });
 };
 
-export const getApiRoot = async () => {
+export const getApiRootWithRetry = async () => {
   const server = await getCtClientServer();
   return createApiBuilderWithRetryFromCtpClient(server).withProjectKey({
     projectKey,
@@ -112,7 +112,7 @@ export const getApiRootForCustomer = (authorization: string) => {
   const client = createClient({
     middlewares: [customerAuthMiddleware, httpMiddleware, errorMiddleware],
   });
-  return createApiBuilderWithRetryFromCtpClient(client).withProjectKey({
+  return createApiBuilderFromCtpClient(client).withProjectKey({
     projectKey,
   });
 };
@@ -180,7 +180,7 @@ export const errorMiddleware = (next: any) => (request: any, response: any) => {
   next(request, response);
 };
 
-export const getApiRootWithoutRetry = async () => {
+export const getApiRoot = async () => {
   const server = await getCtClientServer();
   return createApiBuilderFromCtpClient(server).withProjectKey({
     projectKey,
