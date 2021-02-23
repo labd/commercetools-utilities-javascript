@@ -39,9 +39,12 @@ const getAccessToken = async () => {
 };
 
 const getAuthMiddlewareWithClientCredentials = () => {
-  console.warn(
-    'CT_CLIENT_ID and CT_CLIENT_SECRET for local dev only; make sure this is not used in production'
-  );
+  if (process.env.NODE_ENV !== 'test') {
+    console.warn(
+      'CT_CLIENT_ID and CT_CLIENT_SECRET for local dev only; make sure this is not used in production'
+    );
+  }
+
   assert(process.env.CT_AUTH_URL, 'CT_AUTH_URL missing');
   return createAuthMiddlewareForClientCredentialsFlow({
     host: process.env.CT_AUTH_URL,
