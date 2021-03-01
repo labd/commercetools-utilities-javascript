@@ -62,6 +62,6 @@
     "node-fetch": "^2.6.1"
   },
   "dependencies": {
-    "@labdigital/lambda-utilities": "^0.2.0"
+    "@labdigital/lambda-utilities": "^0.3.6"
   }
 }
