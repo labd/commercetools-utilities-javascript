@@ -99,7 +99,6 @@ export class CommercetoolsClient {
             },
             scopes: getEnvProperty('CT_SCOPES').split(','),
           };
-      console.log(auth);
       return createAuthMiddlewareForClientCredentialsFlow({
         ...auth,
         projectKey: this._options.projectKey,
