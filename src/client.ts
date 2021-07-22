@@ -10,168 +10,114 @@ import {
   createAuthMiddlewareForClientCredentialsFlow,
 } from '@commercetools/sdk-middleware-auth';
 import fetch from 'node-fetch';
-import assert from 'assert';
-import { getSecret } from '@labdigital/lambda-utilities';
 
-assert(process.env.CT_PROJECT_KEY, 'CT_PROJECT_KEY missing');
-const projectKey = process.env.CT_PROJECT_KEY;
-assert(process.env.CT_API_URL, 'CT_API_URL missing');
+export type Options = {
+  host: string;
+  projectKey: string;
+  auth?: AuthOptions | (() => Promise<string>);
+  withIgnoreConflict?: false;
+};
 
-const getAccessToken = async () => {
-  /**
-   * Retrieve commercetools access token from the AWS Secrets Manager.
-   * This token is auto-rotated the by the commercetools token refresher component:
-   * https://github.com/labd/mach-component-aws-commercetools-token-refresher
-   */
-  assert(
-    process.env.CT_ACCESS_TOKEN_SECRET_NAME,
-    'CT_ACCESS_TOKEN_SECRET_NAME missing'
-  );
-  try {
-    const accessToken = await getSecret(
-      process.env.CT_ACCESS_TOKEN_SECRET_NAME
+export type AuthOptions = {
+  host: string;
+  credentials: {
+    clientId: string;
+    clientSecret: string;
+  };
+  scopes: string[];
+};
+
+export class CommercetoolsClient {
+  private _options: Options;
+  private _instance: ApiRoot | undefined;
+  private _instanceCreatedAt: number | undefined;
+
+  constructor(options?: Options) {
+    this._options = options || {
+      host: getEnvProperty('CT_API_URL'),
+      projectKey: getEnvProperty('CT_PROJECT_KEY'),
+    };
+  }
+
+  public async getApiRoot() {
+    const timestamp = new Date().getTime() / 1000;
+
+    if (!this._instanceCreatedAt || this._instanceCreatedAt < timestamp - 900) {
+      const middleware = [
+        await this.getAuthMiddleware(),
+        this.getHttpMiddleware(),
+        errorMiddleware,
+      ];
+
+      const client = createClient({
+        middlewares: middleware,
+      });
+      if (this._options.withIgnoreConflict) {
+        this._instance = createApiBuilderWithIgnoreConflict(client);
+      } else {
+        this._instance = createApiBuilderFromCtpClient(client);
+      }
+      this._instanceCreatedAt = timestamp;
+    }
+
+    if (!this._instance) {
+      throw new Error('Instance not intialized');
+    }
+
+    return this._instance.withProjectKey({
+      projectKey: this._options.projectKey,
+    });
+  }
+
+  private getHttpMiddleware() {
+    return createHttpMiddleware({
+      host: this._options.host,
+      enableRetry: true,
+      retryConfig: {
+        maxRetries: 2,
+        retryDelay: 300,
+        maxDelay: 5000,
+      },
+      fetch: fetch,
+    });
+  }
+
+  private async getAuthMiddleware() {
+    if (typeof this._options.auth === 'function') {
+      const token = await this._options.auth();
+      return createAuthMiddlewareWithExistingToken(`Bearer ${token}`, {
+        force: true,
+      });
+    } else {
+      const auth = this._options.auth
+        ? { ...this._options.auth }
+        : {
+            host: getEnvProperty('CT_AUTH_URL'),
+            credentials: {
+              clientId: getEnvProperty('CT_CLIENT_ID'),
+              clientSecret: getEnvProperty('CT_CLIENT_SECRET'),
+            },
+            scopes: getEnvProperty('CT_SCOPES').split(','),
+          };
+      return createAuthMiddlewareForClientCredentialsFlow({
+        ...auth,
+        projectKey: this._options.projectKey,
+        fetch,
+      });
+    }
+  }
+}
+
+// types from https://github.com/commercetools/nodejs/tree/master/types/sdk.js
+// middleware as https://github.com/commercetools/nodejs/tree/master/packages/sdk-middleware-logger
+export const errorMiddleware = (next: any) => (request: any, response: any) => {
+  const { error } = response;
+  if (error && (response.statusCode < 400 || response.statusCode >= 500))
+    throw new Error(
+      `CT ${error.status} (${error.code}) error: ${error.message}`
     );
-    return JSON.parse(accessToken).access_token;
-  } catch (err) {
-    console.error(err);
-    throw new Error(`Could not retrieve CT access token from secretsmanager`);
-  }
-};
 
-const getAuthMiddlewareWithClientCredentials = () => {
-  if (process.env.NODE_ENV !== 'test') {
-    console.warn(
-      'CT_CLIENT_ID and CT_CLIENT_SECRET for local dev only; make sure this is not used in production'
-    );
-  }
-
-  assert(process.env.CT_AUTH_URL, 'CT_AUTH_URL missing');
-  return createAuthMiddlewareForClientCredentialsFlow({
-    host: process.env.CT_AUTH_URL,
-    projectKey,
-    credentials: {
-      clientId: process.env.CT_CLIENT_ID,
-      clientSecret: process.env.CT_CLIENT_SECRET,
-    },
-    scopes: process.env.CT_SCOPES?.split(','),
-    fetch,
-  });
-};
-
-const getAuthMiddlewareWithExistingToken = async () => {
-  const token = await getAccessToken();
-  return createAuthMiddlewareWithExistingToken(`Bearer ${token}`, {
-    force: true,
-  });
-};
-
-const getAuthMiddleware = async () => {
-  if (
-    process.env.CT_CLIENT_ID &&
-    process.env.CT_CLIENT_SECRET &&
-    process.env.CT_SCOPES &&
-    process.env.NODE_ENV !== 'production'
-  ) {
-    return getAuthMiddlewareWithClientCredentials();
-  }
-
-  return await getAuthMiddlewareWithExistingToken();
-};
-
-const httpMiddleware = createHttpMiddleware({
-  host: process.env.CT_API_URL,
-  enableRetry: true,
-  retryConfig: {
-    maxRetries: 2,
-    retryDelay: 300,
-    maxDelay: 5000,
-  },
-  fetch,
-});
-
-export const getCtClientServer = async () => {
-  const authMiddleware = await getAuthMiddleware();
-
-  return createClient({
-    middlewares: [authMiddleware, httpMiddleware, errorMiddleware],
-  });
-};
-
-const commercetoolsClient: {
-  instance: ApiRoot | undefined;
-  created: Number | undefined;
-} = {
-  instance: undefined,
-  created: undefined,
-};
-
-export const getApiRoot = async () => {
-  const timestamp = new Date().getTime() / 1000;
-
-  if (
-    !commercetoolsClient.created ||
-    commercetoolsClient.created < timestamp - 900
-  ) {
-    const server = await getCtClientServer();
-    commercetoolsClient.instance = createApiBuilderFromCtpClient(server);
-    commercetoolsClient.created = timestamp;
-  }
-
-  assert(commercetoolsClient.instance);
-  return commercetoolsClient.instance.withProjectKey({
-    projectKey,
-  });
-};
-
-const commercetoolsClientWithRetry: {
-  instance: ApiRoot | undefined;
-  created: Number | undefined;
-} = {
-  instance: undefined,
-  created: undefined,
-};
-
-export const getApiRootWithRetry = async () => {
-  const timestamp = new Date().getTime() / 1000;
-
-  if (
-    !commercetoolsClientWithRetry.created ||
-    commercetoolsClientWithRetry.created < timestamp - 900
-  ) {
-    const server = await getCtClientServer();
-    commercetoolsClientWithRetry.instance = createApiBuilderWithRetryFromCtpClient(
-      server
-    );
-    commercetoolsClientWithRetry.created = timestamp;
-  }
-
-  assert(commercetoolsClientWithRetry.instance);
-  assert(process.env.CT_PROJECT_KEY, 'CT_PROJECT_KEY missing');
-  return commercetoolsClientWithRetry.instance.withProjectKey({
-    projectKey,
-  });
-};
-
-export const getApiRootForCustomer = (authorization: string) => {
-  /**
-   * Create commercetools API request builder configured for the me-endpoints for the project configured with the
-   * CT_PROJECT_KEY environment variable.
-   */
-  const customerAuthMiddleware = createAuthMiddlewareWithExistingToken(
-    authorization
-  );
-  const client = createClient({
-    middlewares: [customerAuthMiddleware, httpMiddleware, errorMiddleware],
-  });
-  return createApiBuilderFromCtpClient(client).withProjectKey({
-    projectKey,
-  });
-};
-
-export const validateResponse = (response: any, message: string): void => {
-  if (![200, 201].includes(response.statusCode)) {
-    throw new Error(message);
-  }
+  next(request, response);
 };
 
 // retry on concurrent modification errors
@@ -205,7 +151,7 @@ export const retry = async (
   }
 };
 
-export function createApiBuilderWithRetryFromCtpClient(
+export function createApiBuilderWithIgnoreConflict(
   ctpClient: any,
   baseUri?: string
 ): ApiRoot {
@@ -219,14 +165,10 @@ export function createApiBuilderWithRetryFromCtpClient(
   });
 }
 
-// types from https://github.com/commercetools/nodejs/tree/master/types/sdk.js
-// middleware as https://github.com/commercetools/nodejs/tree/master/packages/sdk-middleware-logger
-export const errorMiddleware = (next: any) => (request: any, response: any) => {
-  const { error } = response;
-  if (error && (response.statusCode < 400 || response.statusCode >= 500))
-    throw new Error(
-      `CT ${error.status} (${error.code}) error: ${error.message}`
-    );
-
-  next(request, response);
+const getEnvProperty = (key: string): string => {
+  const value = process.env[key];
+  if (!value) {
+    throw new Error(`Missing env var ${key}`);
+  }
+  return value;
 };
