@@ -15,7 +15,6 @@ export type Options = {
   host: string;
   projectKey: string;
   auth?: AuthOptions | (() => Promise<string>);
-  withIgnoreConflict?: false;
 };
 
 export type AuthOptions = {
@@ -52,11 +51,7 @@ export class CommercetoolsClient {
       const client = createClient({
         middlewares: middleware,
       });
-      if (this._options.withIgnoreConflict) {
-        this._instance = createApiBuilderWithIgnoreConflict(client);
-      } else {
-        this._instance = createApiBuilderFromCtpClient(client);
-      }
+      this._instance = createApiBuilderFromCtpClient(client);
       this._instanceCreatedAt = timestamp;
     }
 
@@ -150,20 +145,6 @@ export const retry = async (
     }
   }
 };
-
-export function createApiBuilderWithIgnoreConflict(
-  ctpClient: any,
-  baseUri?: string
-): ApiRoot {
-  async function retryOnConcurent(request: ClientRequest) {
-    return retry(() => ctpClient.execute(request), 10, 10, request);
-  }
-
-  return new ApiRoot({
-    executeRequest: retryOnConcurent,
-    baseUri: baseUri,
-  });
-}
 
 const getEnvProperty = (key: string): string => {
   const value = process.env[key];
