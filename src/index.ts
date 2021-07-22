@@ -1,3 +1,3 @@
-import { getApiRoot, getApiRootForCustomer } from './client';
+import { CommercetoolsClient } from './client';
 
-export { getApiRoot, getApiRootForCustomer };
+export { CommercetoolsClient };
