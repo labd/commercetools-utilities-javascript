@@ -34,7 +34,9 @@
     "trailingComma": "es5"
   },
   "name": "@labdigital/commercetools-utilities",
-  "author": "Bram Kaashoek",
+  "author": "Lab Digital",
+  "homepage": "https://github.com/labd/commercetools-utilities-javascript",
+  "repository": "github:labd/commercetools-utilities-javascript",
   "module": "dist/commercetools-utilities.esm.js",
   "size-limit": [
     {
