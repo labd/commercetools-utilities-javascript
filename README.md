@@ -42,7 +42,7 @@ You can also pass a callable to `auth` which returns a token to be used.
 const client = createClient({
   host: process.env.CT_API_URL,
   projectKey,
-  auth: () => {
+  auth: async () => {
     return 'mytoken';
   },
 });
