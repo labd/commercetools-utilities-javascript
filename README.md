@@ -19,7 +19,8 @@ const client = CommercetoolsClient({
   },
 });
 
-client.getApiRoot();
+const projectApi = await client.getProjectApi();
+projectApi.products().get().execute()
 ```
 
 When the options are not passed it will read it from the ENV vars:

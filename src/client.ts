@@ -1,7 +1,6 @@
 import { createClient } from '@commercetools/sdk-client';
 import {
   ApiRoot,
-  ClientRequest,
   createApiBuilderFromCtpClient,
 } from '@commercetools/platform-sdk';
 import { createHttpMiddleware } from '@commercetools/sdk-middleware-http';
@@ -12,18 +11,18 @@ import {
 import fetch from 'node-fetch';
 
 export type Options = {
-  host: string;
-  projectKey: string;
-  auth?: AuthOptions | (() => Promise<string>);
+  host?: string;
+  projectKey?: string;
+  auth?: AuthOptions | (() => Promise<string | AuthOptions | undefined>);
 };
 
 export type AuthOptions = {
-  host: string;
+  host?: string;
   credentials: {
-    clientId: string;
-    clientSecret: string;
+    clientId?: string;
+    clientSecret?: string;
   };
-  scopes: string[];
+  scopes?: string[];
 };
 
 export class CommercetoolsClient {
@@ -32,13 +31,17 @@ export class CommercetoolsClient {
   private _instanceCreatedAt: number | undefined;
 
   constructor(options?: Options) {
-    this._options = options || {
-      host: getEnvProperty('CT_API_URL'),
-      projectKey: getEnvProperty('CT_PROJECT_KEY'),
-    };
+    this._options = options || {};
+
+    if (!this._options.host) {
+      this._options.host = getEnvProperty('API_URL');
+    }
+    if (!this._options.projectKey) {
+      this._options.projectKey = getEnvProperty('PROJECT_KEY');
+    }
   }
 
-  public async getApiRoot() {
+  public async getApiBuilder() {
     const timestamp = new Date().getTime() / 1000;
 
     if (!this._instanceCreatedAt || this._instanceCreatedAt < timestamp - 900) {
@@ -54,12 +57,19 @@ export class CommercetoolsClient {
       this._instance = createApiBuilderFromCtpClient(client);
       this._instanceCreatedAt = timestamp;
     }
-
     if (!this._instance) {
-      throw new Error('Instance not intialized');
+      throw new Error('Client not initialized');
+    }
+    return this._instance;
+  }
+
+  public async getProjectApi() {
+    if (!this._options.projectKey) {
+      throw new Error('No projectKey defined');
     }
 
-    return this._instance.withProjectKey({
+    const builder = await this.getApiBuilder();
+    return builder.withProjectKey({
       projectKey: this._options.projectKey,
     });
   }
@@ -78,30 +88,36 @@ export class CommercetoolsClient {
   }
 
   private async getAuthMiddleware() {
-    if (typeof this._options.auth === 'function') {
-      const token = await this._options.auth();
-      return createAuthMiddlewareWithExistingToken(`Bearer ${token}`, {
-        force: true,
-      });
-    } else {
-      const auth = this._options.auth
-        ? { ...this._options.auth }
-        : {
-            host: getEnvProperty('CT_AUTH_URL'),
-            credentials: {
-              clientId: getEnvProperty('CT_CLIENT_ID'),
-              clientSecret: getEnvProperty('CT_CLIENT_SECRET'),
-            },
-            scopes: getEnvProperty('CT_SCOPES').split(','),
-          };
-      return createAuthMiddlewareForClientCredentialsFlow({
-        ...auth,
-        projectKey: this._options.projectKey,
-        fetch,
-      });
+    let auth = this._options.auth;
+
+    if (typeof auth === 'function') {
+      const authData = await auth();
+      if (typeof authData === 'string') {
+        return createAuthMiddlewareWithExistingToken(`Bearer ${authData}`, {
+          force: true,
+        });
+      }
+      auth = authData;
     }
+    return createAuthMiddlewareForClientCredentialsFlow({
+      ...populateAuthFromEnv(auth),
+      projectKey: this._options.projectKey,
+      fetch,
+    });
   }
 }
+
+const populateAuthFromEnv = (auth?: AuthOptions): AuthOptions => {
+  return {
+    host: auth?.host || getEnvProperty('AUTH_URL'),
+    credentials: {
+      clientId: auth?.credentials?.clientId || getEnvProperty('CLIENT_ID'),
+      clientSecret:
+        auth?.credentials?.clientSecret || getEnvProperty('CLIENT_SECRET'),
+    },
+    scopes: auth?.scopes || getEnvProperty('SCOPES').split(','),
+  };
+};
 
 // types from https://github.com/commercetools/nodejs/tree/master/types/sdk.js
 // middleware as https://github.com/commercetools/nodejs/tree/master/packages/sdk-middleware-logger
@@ -147,9 +163,9 @@ export const retry = async (
 };
 
 const getEnvProperty = (key: string): string => {
-  const value = process.env[key];
+  const value = process.env[`CT_${key}`];
   if (!value) {
-    throw new Error(`Missing env var ${key}`);
+    throw new Error(`Missing env var CT_${key}`);
   }
   return value;
 };
