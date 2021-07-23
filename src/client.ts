@@ -163,9 +163,9 @@ export const retry = async (
 };
 
 const getEnvProperty = (key: string): string => {
-  const value = process.env[`CT_${key}`];
+  const value = process.env[`CT_${key}`] || process.env[`CTP_${key}`];
   if (!value) {
-    throw new Error(`Missing env var CT_${key}`);
+    throw new Error(`Missing env var CT_${key} / CTP_${key}`);
   }
   return value;
 };
