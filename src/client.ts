@@ -131,37 +131,6 @@ export const errorMiddleware = (next: any) => (request: any, response: any) => {
   next(request, response);
 };
 
-// retry on concurrent modification errors
-export const delay = (ms: number) => new Promise(res => setTimeout(res, ms));
-export const retry = async (
-  fn: () => any,
-  times: number,
-  delayTimeMs: number,
-  request: ClientRequest
-): Promise<any> => {
-  try {
-    return await fn();
-  } catch (err) {
-    if (err.statusCode === 409 && times > 1) {
-      if (request.body.version) {
-        const newVersion: number = err.body?.errors[0]?.currentVersion;
-        if (!newVersion)
-          throw new Error(
-            `could not find currentVersion on body of ${JSON.stringify(err)} `
-          );
-        console.log(
-          `Conflicting version, retrying with updated version: ${newVersion}`
-        );
-        request.body.version = newVersion;
-      }
-      await delay(delayTimeMs);
-      return retry(fn, times - 1, delayTimeMs * 2, request);
-    } else {
-      throw err;
-    }
-  }
-};
-
 const getEnvProperty = (key: string): string => {
   const value = process.env[`CT_${key}`] || process.env[`CTP_${key}`];
   if (!value) {
