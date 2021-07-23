@@ -65,7 +65,6 @@
   },
   "peerDependencies": {
     "@commercetools/platform-sdk": "^1.8.0",
-    "aws-sdk": "2.795.0",
     "node-fetch": "^2.6.1"
   }
 }
