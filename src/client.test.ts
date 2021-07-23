@@ -31,7 +31,7 @@ describe('init', () => {
       },
     });
 
-    const apiRoot = await client.getApiRoot();
+    const apiRoot = await client.getProjectApi();
     const products = await apiRoot
       .products()
       .get()
@@ -51,7 +51,7 @@ describe('init', () => {
 
     const client = new CommercetoolsClient();
 
-    const apiRoot = await client.getApiRoot();
+    const apiRoot = await client.getProjectApi();
     const products = await apiRoot
       .products()
       .get()
@@ -68,7 +68,7 @@ describe('init', () => {
       },
     });
 
-    const apiRoot = await client.getApiRoot();
+    const apiRoot = await client.getProjectApi();
     await expect(
       apiRoot
         .products()
@@ -101,7 +101,7 @@ describe('Auth disabled', () => {
         return 'foo';
       },
     });
-    const apiRoot = await client.getApiRoot();
+    const apiRoot = await client.getProjectApi();
     const result = await apiRoot
       .products()
       .get()

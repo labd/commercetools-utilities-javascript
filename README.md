@@ -34,7 +34,7 @@ When the options are not passed it will read it from the ENV vars:
 
 ```ts
 const client = CommercetoolsClient();
-client.getApiRoot();
+client.getProjectApi();
 ```
 
 You can also pass a callable to `auth` which returns a token to be used.
@@ -48,7 +48,7 @@ const client = createClient({
   },
 });
 
-client.getApiRoot();
+client.getProjectApi();
 ```
 
 Note that the ApiRoot object is cached on the client instance for 900 seconds
