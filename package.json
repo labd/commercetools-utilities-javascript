@@ -49,22 +49,22 @@
     }
   ],
   "devDependencies": {
-    "@babel/preset-typescript": "^7.14.5",
-    "@commercetools/platform-sdk": "^1.8.0",
-    "@labdigital/commercetools-mock": "^0.5.9",
-    "@size-limit/preset-small-lib": "^4.9.1",
-    "@types/node": "^16.4.0",
-    "@types/node-fetch": "^2.5.11",
+    "@babel/preset-typescript": "7.14.5",
+    "@commercetools/platform-sdk": "2.7.0",
+    "@labdigital/commercetools-mock": "0.5.23",
+    "@size-limit/preset-small-lib": "4.9.1",
+    "@types/node": "16.4.0",
+    "@types/node-fetch": "2.5.11",
     "aws-sdk": "2.795.0",
-    "husky": "^4.3.6",
-    "nock": "^13.1.1",
-    "size-limit": "^4.9.1",
-    "tsdx": "^0.14.1",
-    "tslib": "^2.0.3",
-    "typescript": "^4.1.3"
+    "husky": "4.3.6",
+    "nock": "13.1.1",
+    "size-limit": "4.9.1",
+    "tsdx": "0.14.1",
+    "tslib": "2.0.3",
+    "typescript": "4.1.3"
   },
   "peerDependencies": {
-    "@commercetools/platform-sdk": "^1.8.0",
+    "@commercetools/platform-sdk": "^2.7.0",
     "node-fetch": "^2.6.1"
   }
 }
