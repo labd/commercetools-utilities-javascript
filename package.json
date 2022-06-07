@@ -66,5 +66,8 @@
   "peerDependencies": {
     "@commercetools/platform-sdk": "^2.7.0",
     "node-fetch": "^2.6.1"
+  },
+  "dependencies": {
+    "@commercetools/sdk-client-v2": "^1.4.0"
   }
 }
