@@ -60,9 +60,12 @@ export class CommercetoolsClient {
     }
     let clientBuilder =
       typeof auth === 'string'
-        ? new ClientBuilder().withExistingTokenFlow(`Bearer ${auth}`, {
-            force: true,
-          })
+        ? new ClientBuilder().withExistingTokenFlow(
+            auth.startsWith('Bearer ') ? auth : `Bearer ${auth}`,
+            {
+              force: true,
+            }
+          )
         : new ClientBuilder().withClientCredentialsFlow(
             populateAuthFromEnv(this._options.projectKey!, auth)
           );
