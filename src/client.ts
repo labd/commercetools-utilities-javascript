@@ -12,6 +12,7 @@ import {
   createApiBuilderFromCtpClient,
 } from '@commercetools/platform-sdk';
 import fetch from 'node-fetch';
+import { assert } from 'console';
 
 export type Options = {
   isLogEnabled?: boolean;
@@ -114,7 +115,7 @@ const populateAuthFromEnv = (
   projectKey: string,
   auth?: AuthOptions
 ): AuthMiddlewareOptions => {
-  return {
+  const filledAuth = {
     projectKey: projectKey,
     host: auth?.host || getEnvProperty('AUTH_URL'),
     credentials: {
@@ -124,6 +125,16 @@ const populateAuthFromEnv = (
     },
     scopes: auth?.scopes || getEnvProperty('SCOPES').split(','),
   };
+
+  assert(
+    auth?.credentials.clientId,
+    'CT client ID missing. Pass it in auth config or set it as CT_CLIENT_ID in env.'
+  );
+  assert(
+    auth?.credentials.clientSecret,
+    'CT client secret missing. Pass it in auth config or set it as CT_CLIENT_SECRET in env.'
+  );
+  return filledAuth;
 };
 
 export const errorMiddleware: Middleware = (next: Dispatch) => (
