@@ -59,21 +59,24 @@ export class CommercetoolsClient {
     if (typeof auth === 'function') {
       auth = await auth();
     }
-    let clientBuilder =
-      typeof auth === 'string'
-        ? new ClientBuilder().withExistingTokenFlow(
-            auth.startsWith('Bearer ') ? auth : `Bearer ${auth}`,
-            {
-              force: true,
-            }
-          )
-        : new ClientBuilder().withClientCredentialsFlow(
-            populateAuthFromEnv(this._options.projectKey!, auth)
-          );
-
-    clientBuilder = clientBuilder
+    let clientBuilder = new ClientBuilder()
+      .withMiddleware(
+        typeof auth === 'string'
+          ? createAuthWithExistingToken(
+              auth.startsWith('Bearer ') ? auth : `Bearer ${auth}`,
+              {
+                force: true,
+              }
+            )
+          : createAuthForClientCredentialsFlow(
+              populateAuthFromEnv(this._options.projectKey!, auth)
+            )
+      )
+      .withMiddleware(
+        createHttpClient(this.getHttpMiddlewareOptions(this._options))
+      )
       .withProjectKey(this._options.projectKey!)
-      .withHttpMiddleware(this.getHttpMiddlewareOptions(this._options))
+      .withMiddleware(errorMiddleware)
       .withMiddleware(errorMiddleware);
 
     if (this._options.isLogEnabled) {
