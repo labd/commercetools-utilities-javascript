@@ -1,6 +1,9 @@
 import {
   AuthMiddlewareOptions,
   ClientBuilder,
+  createAuthForClientCredentialsFlow,
+  createAuthWithExistingToken,
+  createHttpClient,
   Dispatch,
   HttpMiddlewareOptions,
   Middleware,
@@ -33,14 +36,14 @@ export type AuthOptions = {
   scopes?: string[];
 };
 
+let _instance: ApiRoot | undefined;
+let _instanceCreatedAt: number | undefined;
+
 export class CommercetoolsClient {
   private _options: Options;
-  private _instance: ApiRoot | undefined;
-  private _instanceCreatedAt: number | undefined;
 
   constructor(options?: Options) {
     this._options = options || {};
-
     if (!this._options.host) {
       this._options.host = getEnvProperty('API_URL');
     }
@@ -51,14 +54,15 @@ export class CommercetoolsClient {
 
   public async getApiBuilder() {
     const timestamp = new Date().getTime() / 1000;
-    if (this._instanceCreatedAt && this._instanceCreatedAt + 900 > timestamp) {
-      return this._instance;
+    if (_instanceCreatedAt && _instanceCreatedAt + 900 > timestamp) {
+      return _instance;
     }
 
     let auth = this._options.auth;
     if (typeof auth === 'function') {
       auth = await auth();
     }
+
     let clientBuilder = new ClientBuilder()
       .withMiddleware(
         typeof auth === 'string'
@@ -77,7 +81,7 @@ export class CommercetoolsClient {
       )
       .withProjectKey(this._options.projectKey!)
       .withMiddleware(errorMiddleware)
-      .withMiddleware(errorMiddleware);
+      .withMiddleware(tokenScopeChangeMiddleware);
 
     if (this._options.isLogEnabled) {
       clientBuilder = clientBuilder.withLoggerMiddleware();
@@ -85,12 +89,13 @@ export class CommercetoolsClient {
 
     const client = clientBuilder.build();
 
-    this._instance = createApiBuilderFromCtpClient(client);
-    this._instanceCreatedAt = timestamp;
-    if (!this._instance) {
+    _instance = createApiBuilderFromCtpClient(client);
+    _instanceCreatedAt = timestamp;
+
+    if (!_instance) {
       throw new Error('Client not initialized');
     }
-    return this._instance;
+    return _instance;
   }
 
   public async getProjectApi() {
@@ -127,6 +132,7 @@ const populateAuthFromEnv = (
         auth?.credentials?.clientSecret || getEnvProperty('CLIENT_SECRET'),
     },
     scopes: auth?.scopes || getEnvProperty('SCOPES').split(','),
+    fetch,
   };
 
   assert(
@@ -150,6 +156,20 @@ export const errorMiddleware: Middleware = (next: Dispatch) => (
       `CT ${error.status} (${error.code}) error: ${error.message}`
     );
 
+  next(request, response);
+};
+
+// when invalid token error occurs, we need to refresh the instance.
+export const tokenScopeChangeMiddleware: Middleware = (next: Dispatch) => (
+  request: MiddlewareRequest,
+  response: MiddlewareResponse
+) => {
+  const { error } = response;
+
+  if (error && error.body?.message === 'invalid_token') {
+    _instance = undefined;
+    _instanceCreatedAt = undefined;
+  }
   next(request, response);
 };
 
