@@ -101,6 +101,7 @@ export class CommercetoolsClient {
     return {
       host: options.host!,
       enableRetry: true,
+      includeResponseHeaders: true,
       retryConfig: {
         maxRetries: 2,
         retryDelay: 300,
