@@ -168,7 +168,7 @@ export const tokenScopeChangeMiddleware: Middleware = (
   if (error && error.body?.message === 'invalid_token') {
     _instance = undefined;
     _instanceCreatedAt = undefined;
-    await new CommercetoolsClient().getProjectApi();
+    await new CommercetoolsClient().getApiBuilder();
   }
   next(request, response);
 };
