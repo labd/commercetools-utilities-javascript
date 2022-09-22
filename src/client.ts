@@ -160,15 +160,15 @@ export const errorMiddleware: Middleware = (next: Dispatch) => (
 };
 
 // when invalid token error occurs, we need to refresh the instance.
-export const tokenScopeChangeMiddleware: Middleware = (next: Dispatch) => (
-  request: MiddlewareRequest,
-  response: MiddlewareResponse
-) => {
+export const tokenScopeChangeMiddleware: Middleware = (
+  next: Dispatch
+) => async (request: MiddlewareRequest, response: MiddlewareResponse) => {
   const { error } = response;
 
   if (error && error.body?.message === 'invalid_token') {
     _instance = undefined;
     _instanceCreatedAt = undefined;
+    await new CommercetoolsClient().getProjectApi();
   }
   next(request, response);
 };
