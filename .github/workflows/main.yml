@@ -83,7 +83,7 @@ jobs:
         if: github.ref != 'refs/heads/main'
         with:
           push: false
-          tags: labdigital/commercetools-mock-server:latest
+          tags: labdigital/commercetools-utilities-javascript:latest
 
       # Build and push if main branch
       - name: Build and push
@@ -91,7 +91,7 @@ jobs:
         if: github.ref == 'refs/heads/main'
         with:
           push: true
-          tags: labdigital/commercetools-mock-server:latest
+          tags: labdigital/commercetools-utilities-javascript:latest
 
   release:
     timeout-minutes: 15
