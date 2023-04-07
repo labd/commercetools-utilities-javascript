@@ -3,7 +3,7 @@
   "changelog": [
     "@changesets/changelog-github",
     {
-      "repo": "labd/commercetools-node-mock"
+      "repo": "labd/commercetools-utilities-javascript"
     }
   ],
   "commit": false,
