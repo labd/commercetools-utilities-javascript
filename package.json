@@ -8,17 +8,20 @@
     "src"
   ],
   "engines": {
-    "node": ">=10"
+    "pnpm": "8.1.1",
+    "node": ">=16"
   },
+  "packageManager": "pnpm@8.1.1",
   "publishConfig": {
     "access": "public"
   },
   "scripts": {
-    "start": "tsdx watch",
-    "build": "tsdx build",
-    "test": "tsdx test",
-    "lint": "tsdx lint",
-    "prepare": "tsdx build",
+    "start": "tsup src --watch",
+    "build": "tsup src",
+    "publish:ci": "pnpm build && pnpm changeset publish",
+    "test": "jest test --coverage",
+    "lint": "eslint src/ --ext ts",
+    "prepare": "pnpm run build",
     "size": "size-limit",
     "analyze": "size-limit --why"
   },
@@ -50,17 +53,22 @@
   ],
   "devDependencies": {
     "@babel/preset-typescript": "7.14.5",
+    "@changesets/cli": "^2.26.0",
+    "@changesets/changelog-github": "^0.4.8",
     "@commercetools/platform-sdk": "2.7.0",
-    "@labdigital/commercetools-mock": "0.5.23",
+    "@labdigital/commercetools-mock": "1.0.0",
+    "@labdigital/eslint-config-node": "0.0.5",
     "@size-limit/preset-small-lib": "4.9.1",
     "@types/node": "16.4.0",
     "@types/node-fetch": "2.5.11",
     "aws-sdk": "2.795.0",
     "husky": "4.3.6",
+    "jest": "^28.1.3",
     "nock": "13.1.1",
     "size-limit": "4.9.1",
     "tsdx": "0.14.1",
     "tslib": "2.0.3",
+    "tsup": "^6.7.0",
     "typescript": "4.1.3"
   },
   "peerDependencies": {

@@ -52,3 +52,10 @@ client.getProjectApi();
 ```
 
 Note that the ApiRoot object is cached on the client instance for 900 seconds
+
+## Releasing
+
+This codebases use [@changesets](https://github.com/changesets/changesets) for release and version management
+- Create a new changeset using `pnpm changeset`
+- Push the changes to the `main` branch. 
+- GitHub actions will create a release PR. When the release is ready merge the release branch
