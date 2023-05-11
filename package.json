@@ -50,7 +50,7 @@
   ],
   "devDependencies": {
     "@babel/preset-typescript": "7.14.5",
-    "@commercetools/platform-sdk": "2.7.0",
+    "@commercetools/platform-sdk": "4.7.1",
     "@labdigital/commercetools-mock": "0.5.23",
     "@size-limit/preset-small-lib": "4.9.1",
     "@types/node": "16.4.0",
