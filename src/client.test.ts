@@ -1,6 +1,11 @@
 import { CommercetoolsMock } from '@labdigital/commercetools-mock';
 import nock from 'nock';
 import { CommercetoolsClient } from './client';
+import {
+  Dispatch,
+  MiddlewareRequest,
+  MiddlewareResponse,
+} from '@commercetools/sdk-client-v2';
 
 describe('init', () => {
   const ctMock = new CommercetoolsMock({
@@ -76,5 +81,70 @@ describe('init', () => {
         .get()
         .execute()
     ).rejects.toThrowError();
+  });
+
+  it('calls an external middleware when api request is made', async () => {
+    const middlewareMock = jest.fn();
+    const middlewareMockWrapper = (next: Dispatch) => (
+      request: MiddlewareRequest,
+      response: MiddlewareResponse
+    ) => {
+      middlewareMock();
+      next(request, response);
+    };
+
+    const client = new CommercetoolsClient({
+      host: 'https://api.europe-west1.gcp.commercetools.com/',
+      projectKey: 'my-project',
+      auth: {
+        host: 'https://auth.europe-west1.gcp.commercetools.com/',
+        credentials: {
+          clientId: 'my-client-id',
+          clientSecret: 'my-client-secret',
+        },
+        scopes: ['view_orders:my-project', 'view_products:my-project'],
+      },
+      middlewares: [middlewareMockWrapper],
+    });
+
+    const apiRoot = await client.getProjectApi();
+    await apiRoot
+      .products()
+      .get()
+      .execute();
+    await apiRoot
+      .productTypes()
+      .get()
+      .execute();
+
+    expect(middlewareMock).toHaveBeenCalledTimes(2);
+  });
+
+  it('does not call an external middleware when no api requests are made', async () => {
+    const middlewareMock = jest.fn();
+    const middlewareMockWrapper = (next: Dispatch) => (
+      request: MiddlewareRequest,
+      response: MiddlewareResponse
+    ) => {
+      middlewareMock();
+      next(request, response);
+    };
+
+    const client = new CommercetoolsClient({
+      host: 'https://api.europe-west1.gcp.commercetools.com/',
+      projectKey: 'my-project',
+      auth: {
+        host: 'https://auth.europe-west1.gcp.commercetools.com/',
+        credentials: {
+          clientId: 'my-client-id',
+          clientSecret: 'my-client-secret',
+        },
+        scopes: ['view_orders:my-project', 'view_products:my-project'],
+      },
+      middlewares: [middlewareMockWrapper],
+    });
+
+    await client.getProjectApi();
+    expect(middlewareMock).toHaveBeenCalledTimes(0);
   });
 });

@@ -52,3 +52,23 @@ client.getProjectApi();
 ```
 
 Note that the ApiRoot object is cached on the client instance for 900 seconds
+
+### Pass custom middleware to the Commercetools client
+
+```ts
+const client = CommercetoolsClient({
+  host: 'https://api.europe-west1.gcp.commercetools.com/',
+  projectKey: 'my-project',
+  auth: {
+    host: 'https://auth.europe-west1.gcp.commercetools.com/',
+    credentials: {
+      clientId: 'my-client-id',
+      clientSecret: 'my-client-secret',
+    },
+    scopes: ['view_orders:my-project', 'view_products:my-project'],
+  },
+  middlewares: [yourMiddleware]
+});
+```
+
+See the [commercetools sdk docs](https://docs.commercetools.com/sdk/js-sdk-middleware#custom-middleware) for an example of custom middleware or check the tests in `client.test.ts`.
