@@ -18,6 +18,7 @@ export type Options = {
   isLogEnabled?: boolean;
   host?: string;
   projectKey?: string;
+  middlewares?: any[];
   auth?:
     | AuthOptions
     | string
@@ -78,6 +79,12 @@ export class CommercetoolsClient {
 
     if (this._options.isLogEnabled) {
       clientBuilder = clientBuilder.withLoggerMiddleware();
+    }
+
+    if (this._options?.middlewares) {
+      for (const middleware of this._options?.middlewares) {
+        clientBuilder = clientBuilder.withMiddleware(middleware);
+      }
     }
 
     const client = clientBuilder.build();
